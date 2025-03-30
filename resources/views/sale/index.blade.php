@@ -26,8 +26,9 @@
             </div>
         </div>
     </div>
-
+    @include('sale.details')
     @include('sale.create')
+
 </div>
 @endsection
 
@@ -44,7 +45,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 "dataSrc": function (response) {
-                    console.log(response); // Debug: Ver la respuesta en consola
+                    console.log(response); 
                     if (response.status === 200) {
                         return response.products;
                     } else {
@@ -75,7 +76,7 @@
                     'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                 },
                 "dataSrc": function (response) {
-                    console.log(response); // Debug: Ver la respuesta en consola
+                    console.log(response); 
                     if (response.status === 200) {
                         return response.sales;
                     } else {
@@ -155,7 +156,7 @@
             $('#total').text(total.toFixed(2));
         }
 
-        // Manejo del botón "Confirm Sale"
+      
         $("#confirm-sale-btn").on("click", function() {
             let products = [];
 
@@ -184,7 +185,7 @@
                 products: products,
             };
 
-            // Enviar los datos por AJAX
+
             $.ajax({
                 url: "{{ route('storeSale') }}",
                 method: "POST",
@@ -205,6 +206,47 @@
                 }
             });
         });
+
+        $(document).on('click', '.view-sale', function() {
+            $('#saleDetailModal').modal('show');
+            let saleId = $(this).data('id');
+
+            $.ajax({
+                url: "{{ route('getSaleDetails') }}",
+                method: "GET",
+                data: { id: saleId },
+                success: function(response) {
+                    if (response.status === 200) {
+                        let sale = response.sale;
+
+                        // Mostrar los detalles de la venta
+                        $('#sale-id').text(sale.id);
+                        $('#sale-date').text(sale.sale_date);
+                        $('#sale-total').text(sale.total.toFixed(2));
+
+                        // Mostrar los productos en la tabla
+                        let detailsHtml = "";
+                        sale.products.forEach(product => {
+                            detailsHtml += `
+                                <tr>
+                                    <td>${product.name}</td>
+                                    <td>${product.quantity}</td>
+                                    <td>$${product.subtotal.toFixed(2)}</td>
+                                </tr>
+                            `;
+                        });
+
+                        $('#sale-details-body').html(detailsHtml);
+                    } else {
+                        alert("Error fetching sale details.");
+                    }
+                },
+                error: function(xhr) {
+                    alert('Error: ' + xhr.responseText);
+                }
+            });
+        });
+
     });
 </script>
 @endsection
